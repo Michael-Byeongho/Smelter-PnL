@@ -1,0 +1,67 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>CRU smelter margin model</title>
+<style>
+:root{font-family:system-ui,-apple-system,Segoe UI,Arial,sans-serif;color:#192d3b;background:#f3f6f9}*{box-sizing:border-box}
+body{margin:0}.wrap{max-width:1120px;margin:auto;padding:28px 18px 60px}
+h1{font-size:27px;margin:0 0 7px}h2{font-size:16px;margin:0 0 16px}.muted{color:#617382;font-size:13px}
+.top{margin-bottom:22px}.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:15px}
+.tile,.panel{background:white;border:1px solid #dfe7ec;border-radius:12px;padding:20px;box-shadow:0 1px 3px #152f4210}
+.tile strong{display:block;font-size:29px;margin-top:9px;font-variant-numeric:tabular-nums}.tile .muted{font-size:13px}
+.main{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+.panel{margin-bottom:16px}.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+label{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:550}small{color:#687987;font-weight:400}
+input{width:100%;font:inherit;font-size:16px;padding:10px 11px;border:1px solid #cbd7df;border-radius:7px;color:#172f40;background:white}
+input:focus{outline:2px solid #4d93b9;outline-offset:1px}
+.line{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid #e8edf1;font-size:14px}
+.line b,.line span:last-child{font-variant-numeric:tabular-nums}.line.total{font-weight:750;border-top:2px solid #ccd9e1}
+.chartrow{display:flex;height:26px;border-radius:5px;overflow:hidden;background:#edf1f4;margin:14px 0 16px}
+.seg{height:100%;min-width:0;transition:width .15s}.legend{display:grid;grid-template-columns:1fr auto;gap:9px;font-size:13px}
+.swatch{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:8px}
+.neg{color:#b24a42}.pos{color:#177b66}
+.adjust{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+button{border:1px solid #cbd7df;background:#fff;border-radius:8px;padding:10px 13px;cursor:pointer;font-weight:650}
+button:hover{background:#edf5fa}.note{font-size:12px;color:#687987;line-height:1.5;margin-top:14px}
+@media(max-width:760px){.summary,.main{grid-template-columns:1fr}.fields{grid-template-columns:repeat(2,minmax(0,1fr))}.wrap{padding:18px 12px}}
+</style></head><body><div class="wrap">
+<header class="top"><h1>CRU smelter margin model</h1><p class="note">Cu payable = max(0, min(grade × payable%, grade − minimum deduction)). Minimum deduction is in percentage points, not a percentage of contained Cu. Set 0 to reproduce the original. Default: 24% × 96.5% = 23.16%; 24% − 1pp = 23%; payable = 23% of DMT.</p><div class="muted">Chinese copper smelter economics · all revenues and margins in $/dmt of concentrate</div></header>
+<div class="summary"><div class="tile"><span class="muted">Non-TCRC revenue</span><strong id="nonTop"></strong></div><div class="tile"><span class="muted">Total revenue</span><strong id="totalTop"></strong></div><div class="tile"><span class="muted">Cash margin</span><strong id="marginTop"></strong></div></div>
+<div class="main"><div><section class="panel"><h2>Concentrate specifications</h2><div class="fields"><label><span>Copper grade <small>(%)</small></span><input id="cuGrade" type="number" step="any" value="24"></label><label><span>Gold grade <small>(g/dmt)</small></span><input id="auGrade" type="number" step="any" value="2"></label><label><span>Silver grade <small>(g/dmt)</small></span><input id="agGrade" type="number" step="any" value="90"></label></div></section><section class="panel"><h2>Commercial terms and recoveries</h2><div class="fields"><label><span>Copper payable <small>(%)</small></span><input id="cuPay" type="number" step="any" value="96.5"></label><label><span>Copper minimum deduction <small>(percentage points of Cu grade)</small></span><input id="cuMinDed" type="number" min="0" max="100" step="any" value="1"></label><label><span>Copper recovery <small>(%)</small></span><input id="cuRec" type="number" step="any" value="98.5"></label><label><span>Gold payable <small>(%)</small></span><input id="auPay" type="number" step="any" value="92"></label><label><span>Gold deduction <small>(g/dmt)</small></span><input id="auDed" type="number" step="any" value="0"></label><label><span>Gold recovery <small>(%)</small></span><input id="auRec" type="number" step="any" value="98.5"></label><label><span>Silver payable <small>(%)</small></span><input id="agPay" type="number" step="any" value="90"></label><label><span>Silver deduction <small>(g/dmt)</small></span><input id="agDed" type="number" step="any" value="0"></label><label><span>Silver recovery <small>(%)</small></span><input id="agRec" type="number" step="any" value="98"></label></div></section><section class="panel"><h2>Sulphuric acid</h2><div class="fields"><label><span>Acid production ratio <small>(t/dmt)</small></span><input id="acidRatio" type="number" step="any" value="0.914"></label></div></section><section class="panel"><h2>Market prices</h2><div class="fields"><label><span>Copper price <small>($/t)</small></span><input id="cuPrice" type="number" step="any" value="13988"></label><label><span>Gold price <small>($/oz)</small></span><input id="auPrice" type="number" step="any" value="4711"></label><label><span>Silver price <small>($/oz)</small></span><input id="agPrice" type="number" step="any" value="65.76"></label><label><span>Acid price <small>(RMB/t)</small></span><input id="acidPrice" type="number" step="any" value="1212"></label><label><span>Cathode premium <small>(RMB/t)</small></span><input id="premium" type="number" step="any" value="110"></label><label><span>Exchange rate <small>(CNY/USD)</small></span><input id="fx" type="number" step="any" value="6.85"></label></div></section><section class="panel"><h2>Treatment charges and costs</h2><div class="fields"><label><span>Spot TC <small>($/dmt)</small></span><input id="tc" type="number" step="any" value="-142"></label><label><span>Cash cost <small>($/dmt)</small></span><input id="cost" type="number" step="any" value="80"></label></div></section></div><div>
+<section class="panel"><h2>Revenue composition</h2><div class="muted">Positive non-TCRC components (coloured) and negative TCRC deduction (red)</div>
+<div id="chart" class="chartrow"></div><div id="legend" class="legend"></div>
+<div style="margin-top:17px" id="tcrcBar"></div></section>
+<section class="panel"><h2>Treatment and refining charges</h2><div class="line"><span>TC ($/dmt)</span><b id="tcOut"></b></div><div class="line"><span>RC (¢/lb)</span><b id="rcOut"></b></div><div class="line"><span>Treatment charge revenue</span><b id="tcRev"></b></div><div class="line"><span>Refining charge revenue</span><b id="rcRev"></b></div><div class="line total"><span>Total TCRC revenue</span><b id="tcrcRev"></b></div></section>
+<section class="panel"><h2>Smelter revenue and margin</h2><div id="breakdown"></div><div class="adjust"><button id="reset">Reset assumptions</button><button id="copy">Copy results</button></div>
+</section>
+</div></div></div>
+<script>
+const defaults={"cuGrade": 24, "auGrade": 2, "agGrade": 90, "cuPay": 96.5, "cuMinDed": 1, "cuRec": 98.5, "auPay": 92, "auDed": 0, "auRec": 98.5, "agPay": 90, "agDed": 0, "agRec": 98, "acidRatio": 0.914, "cuPrice": 13988, "auPrice": 4711, "agPrice": 65.76, "acidPrice": 1212, "premium": 110, "fx": 6.85, "tc": -142, "cost": 80};
+const ids=Object.keys(defaults), $=id=>document.getElementById(id);
+const money=(n,d=1)=>(n<0?'−':'')+'$'+Math.abs(n).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+const num=(n,d=1)=>(n<0?'−':'')+Math.abs(n).toFixed(d);
+const components=[['Free copper','#267b93'],['Free gold','#0f9f82'],['Free silver','#b88a41'],['Sulphuric acid','#7569b6'],['Cathode premium','#db8c52']];
+function calculate(){
+const v=Object.fromEntries(ids.map(k=>[k,Number($(k).value)||0]));
+if(v.cuMinDed<0||v.cuMinDed>100){$('marginTop').textContent='Invalid Cu deduction';return;}
+const cu=v.cuGrade/100,pay=Math.max(0,Math.min(cu*v.cuPay/100,cu-v.cuMinDed/100)),rec=cu*v.cuRec/100;
+const fcu=(rec-pay)*v.cuPrice;
+const fau=(v.auGrade*v.auRec/100-Math.max(0,v.auGrade-v.auDed)*v.auPay/100)*v.auPrice/31.1034768;
+const fag=(v.agGrade*v.agRec/100-Math.max(0,v.agGrade-v.agDed)*v.agPay/100)*v.agPrice/31.1034768;
+const acid=v.fx>0?v.acidRatio*v.acidPrice/v.fx:0;
+const prem=v.fx>0?rec*v.premium/v.fx:0;
+const revs=[fcu,fau,fag,acid,prem],non=revs.reduce((a,b)=>a+b,0);
+const rc=v.tc/10,rcRevenue=rc*pay*2204.62262185/100,tcrc=v.tc+rcRevenue,total=non+tcrc,margin=total-v.cost;
+$('nonTop').textContent=money(non);$('totalTop').textContent=money(total);$('marginTop').textContent=money(margin);
+$('marginTop').className=margin<0?'neg':'pos';
+$('tcOut').textContent=money(v.tc);$('rcOut').textContent=num(rc,2);$('tcRev').textContent=money(v.tc);$('rcRev').textContent=money(rcRevenue);$('tcrcRev').textContent=money(tcrc);
+const positive=revs.map(x=>Math.max(0,x)),denom=positive.reduce((a,b)=>a+b,0)||1;
+$('chart').innerHTML=positive.map((n,i)=>'<div class="seg" style="width:'+(100*n/denom)+'%;background:'+components[i][1]+'"></div>').join('');
+$('legend').innerHTML=components.map((c,i)=>'<div><i class="swatch" style="background:'+c[1]+'"></i>'+c[0]+'</div><b>'+money(revs[i])+'</b>').join('');
+$('tcrcBar').innerHTML='<div class="line"><span>TC and RC revenue</span><b class="'+(tcrc<0?'neg':'pos')+'">'+money(tcrc)+'</b></div><div style="height:10px;background:#e8edf1;border-radius:5px;overflow:hidden"><div style="height:100%;width:'+Math.min(100,100*Math.abs(tcrc)/Math.max(1,denom))+'%;background:'+(tcrc<0?'#b24a42':'#0f9f82')+'"></div></div>';
+const rows=[...components.map((c,i)=>[c[0],revs[i]]),['Non-TCRC revenue',non],['TC and RC revenue',tcrc],['Total revenue',total],['Less cash cost',-v.cost],['Cash margin',margin]];
+$('breakdown').innerHTML=rows.map((r,i)=>'<div class="line '+([5,7,9].includes(i)?'total':'')+'"><span>'+r[0]+'</span><b>'+money(r[1])+'</b></div>').join('');
+window.lastExport=[...ids.map(k=>k+'\t'+v[k]),...rows.map(r=>r[0]+'\t'+r[1].toFixed(1)), 'RC (¢/lb)\t'+rc.toFixed(2)].join('\n');
+}
+ids.forEach(k=>$(k).addEventListener('input',calculate));
+$('reset').onclick=()=>{ids.forEach(k=>$(k).value=defaults[k]);calculate()};
+$('copy').onclick=async()=>{try{await navigator.clipboard.writeText(window.lastExport);$('copy').textContent='Copied';setTimeout(()=>$('copy').textContent='Copy results',1500)}catch(e){const t=document.createElement('textarea');t.value=window.lastExport;document.body.appendChild(t);t.select();document.execCommand('copy');t.remove()}};
+calculate();
+</script></body></html>
